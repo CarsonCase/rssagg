@@ -62,6 +62,7 @@ func main() {
 	routerV1.Get("/ready", handlerReadiness)
 	routerV1.Get("/error", handlerErr)
 	routerV1.Post("/users", apiConfg.handlerCreateUser)
+	routerV1.Get("/users", apiConfg.handlerGetUser)
 
 	router.Mount("/v1", routerV1)
 

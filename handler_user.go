@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CarsonCase/rssagg/internal/auth"
 	"github.com/CarsonCase/rssagg/internal/database"
 	"github.com/google/uuid"
 )
@@ -34,6 +35,22 @@ func (c *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		RespondWithError(w, 400, "couldn't create user"+err.Error())
+	}
+
+	RespondWithJson(w, http.StatusOK, user)
+}
+
+func (c *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetApiKey(r.Header)
+
+	if err != nil {
+		RespondWithError(w, 403, "Auth error"+err.Error())
+	}
+
+	user, err := c.DB.GetUserByApiKey(r.Context(), apiKey)
+
+	if err != nil {
+		RespondWithError(w, 400, "Couldn't get user"+err.Error())
 	}
 
 	RespondWithJson(w, http.StatusOK, user)
