@@ -1,16 +1,23 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/CarsonCase/rssagg/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
+
+type apiConfig struct {
+	DB *database.Queries
+}
 
 func main() {
 	godotenv.Load()
@@ -21,6 +28,22 @@ func main() {
 
 	if portString == "" {
 		log.Fatal("Port not found. Please fill out ENV file")
+	}
+
+	sqlString := os.Getenv("DB_URL")
+
+	if sqlString == "" {
+		log.Fatal("sql string not found. Please fill out ENV file")
+	}
+
+	connection, err := sql.Open("postgres", sqlString)
+
+	if err != nil {
+		log.Fatal("Error connecting to db")
+	}
+
+	apiConfg := apiConfig{
+		DB: database.New(connection),
 	}
 
 	router := chi.NewRouter()
@@ -38,6 +61,7 @@ func main() {
 
 	routerV1.Get("/ready", handlerReadiness)
 	routerV1.Get("/error", handlerErr)
+	routerV1.Post("/users", apiConfg.handlerCreateUser)
 
 	router.Mount("/v1", routerV1)
 
@@ -48,7 +72,7 @@ func main() {
 
 	log.Printf("Server starting on port %v\n", portString)
 
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
