@@ -9,9 +9,9 @@ import (
 	"github.com/google/uuid"
 )
 
-func (c *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func (c *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
-		Name string `json:"name"`
+		FeedID uuid.UUID `json:"feed_id"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -25,20 +25,17 @@ func (c *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.DB.CreateUser(r.Context(), database.CreateUserParams{
+	feed, err := c.DB.CreateFeedFollows(r.Context(), database.CreateFeedFollowsParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
-		Name:      params.Name,
+		UserID:    user.ID,
+		FeedID:    params.FeedID,
 	})
 
 	if err != nil {
-		RespondWithError(w, 400, "couldn't create user"+err.Error())
+		RespondWithError(w, 400, "couldn't create follow"+err.Error())
 	}
 
-	RespondWithJson(w, http.StatusOK, user)
-}
-
-func (c *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
-	RespondWithJson(w, http.StatusOK, user)
+	RespondWithJson(w, http.StatusOK, feed)
 }

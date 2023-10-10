@@ -20,6 +20,12 @@ type apiConfig struct {
 }
 
 func main() {
+	feed, err := urlToFeed("https://blog.boot.dev/index.xml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(feed)
+
 	godotenv.Load()
 
 	fmt.Printf("Hello World\n")
@@ -42,7 +48,7 @@ func main() {
 		log.Fatal("Error connecting to db")
 	}
 
-	apiConfg := apiConfig{
+	apiCfg := apiConfig{
 		DB: database.New(connection),
 	}
 
@@ -61,8 +67,11 @@ func main() {
 
 	routerV1.Get("/ready", handlerReadiness)
 	routerV1.Get("/error", handlerErr)
-	routerV1.Post("/users", apiConfg.handlerCreateUser)
-	routerV1.Get("/users", apiConfg.handlerGetUser)
+	routerV1.Post("/users", apiCfg.handlerCreateUser)
+	routerV1.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+	routerV1.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
+	routerV1.Get("/feeds", apiCfg.handlerGetFeeds)
+	routerV1.Post("/feedFollows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
 
 	router.Mount("/v1", routerV1)
 
