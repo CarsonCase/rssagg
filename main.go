@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/CarsonCase/rssagg/internal/database"
 	"github.com/go-chi/chi"
@@ -20,11 +21,6 @@ type apiConfig struct {
 }
 
 func main() {
-	feed, err := urlToFeed("https://blog.boot.dev/index.xml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(feed)
 
 	godotenv.Load()
 
@@ -51,6 +47,8 @@ func main() {
 	apiCfg := apiConfig{
 		DB: database.New(connection),
 	}
+
+	go startScraping(database.New(connection), 10, time.Minute)
 
 	router := chi.NewRouter()
 
